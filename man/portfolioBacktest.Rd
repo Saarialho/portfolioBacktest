@@ -12,6 +12,7 @@ portfolioBacktest(
   price_name = NULL,
   paral_portfolios = 1,
   paral_datasets = 1,
+  aum = 1,
   show_progress_bar = FALSE,
   benchmarks = NULL,
   shortselling = TRUE,
@@ -29,29 +30,29 @@ portfolioBacktest(
 )
 }
 \arguments{
-\item{portfolio_funs}{List of functions (can also be a single function), each of them taking as input 
-a dataset containing a list of \code{xts} objects (following the format of each 
+\item{portfolio_funs}{List of functions (can also be a single function), each of them taking as input
+a dataset containing a list of \code{xts} objects (following the format of each
 element of the argument \code{dataset_list}) properly windowed (following the
 rolling-window approach) and returning the portfolio as a vector of normalized
-weights. See 
+weights. See
 \href{https://CRAN.R-project.org/package=portfolioBacktest/vignettes/PortfolioBacktest.html}{vignette}
 for details.}
 
 \item{dataset_list}{List of datasets, each containing a list of \code{xts} objects, as generated
 by the function \code{\link{financialDataResample}}.}
 
-\item{folder_path}{If \code{portfolio_funs} is not defined, this should contain the path to a folder 
-containing the portfolio functions saved in files. See 
+\item{folder_path}{If \code{portfolio_funs} is not defined, this should contain the path to a folder
+containing the portfolio functions saved in files. See
 \href{https://CRAN.R-project.org/package=portfolioBacktest/vignettes/PortfolioBacktest.html}{vignette}
 for details.}
 
 \item{source_to_local}{Logical value indicating whether to source files to local environment (default is \code{TRUE}).
 It might be dangerous to set it to \code{FALSE} as in such case the global environment may be changed.
-We suggest only to allow \code{FALSE} when the code in the source files does not work when locally 
-sourced, e.g., with some versions of package \code{CVXR}. In that case, we further recommend to set 
+We suggest only to allow \code{FALSE} when the code in the source files does not work when locally
+sourced, e.g., with some versions of package \code{CVXR}. In that case, we further recommend to set
 \code{paral_portfolios > 1} to avoid changing the global environment.}
 
-\item{price_name}{Name of the \code{xts} object in each dataset that contains the prices to be used in the portfolio return 
+\item{price_name}{Name of the \code{xts} object in each dataset that contains the prices to be used in the portfolio return
 computation (default is the name of the first \code{xts} object).}
 
 \item{paral_portfolios}{Interger indicating number of portfolios to be evaluated in parallel (default is \code{1}),
@@ -67,10 +68,10 @@ see \href{https://CRAN.R-project.org/package=portfolioBacktest/vignettes/Portfol
          \item{\code{IVP} - the inverse-volatility portfolio, with weights be inversely proportional the standard deviation of returns;}
          \item{\code{index} - the market index, requires an \code{xts} named `index` in the datasets.}}}
 
-\item{shortselling}{Logical value indicating whether shortselling is allowed or not 
+\item{shortselling}{Logical value indicating whether shortselling is allowed or not
 (default is \code{TRUE}, so no control for shorselling in the backtesting).}
 
-\item{leverage}{Amount of leverage as in \eqn{||w||_1 <= leverage} 
+\item{leverage}{Amount of leverage as in \eqn{||w||_1 <= leverage}
 (default is \code{Inf}, so no control for leverage in the backtesting).}
 
 \item{lookback}{Length of the lookback rolling window in periods (default is \code{252}).}
@@ -81,74 +82,74 @@ see \href{https://CRAN.R-project.org/package=portfolioBacktest/vignettes/Portfol
 
 \item{rebalance_every}{How often the portfolio is to be rebalanced in periods (default is \code{1}).}
 
-\item{bars_per_year}{Number of bars/periods per year. By default it will be calculated automatically 
+\item{bars_per_year}{Number of bars/periods per year. By default it will be calculated automatically
 (e.g., for daily data there are 252 bars/periods per year).}
 
-\item{execution}{String that can be either \code{"same period"} (default) or \code{"next period"}. 
+\item{execution}{String that can be either \code{"same period"} (default) or \code{"next period"}.
 At the rebalancing period \code{t}, the portfolio has used information up to (and including)
 period \code{t}. Same period execution means one can get into the position at that period \code{t},
 whereas the next period execution means that one can only get into the position the following period.}
 
-\item{cost}{List containing four different types of transaction costs (common for all assets) 
-for buying, selling, shorting, and long leveraging. The default is 
+\item{cost}{List containing four different types of transaction costs (common for all assets)
+for buying, selling, shorting, and long leveraging. The default is
 \code{cost = list(buy = 0e-4, sell = 0e-4, short = 0e-4, long_leverage = 0e-4)}.
 If some elements are not specified then they will be automatically set to zero.}
 
-\item{cpu_time_limit}{Time limit for executing each portfolio function over a single data set 
+\item{cpu_time_limit}{Time limit for executing each portfolio function over a single data set
 (default is \code{Inf}, so no time limit).}
 
 \item{return_portfolio}{Logical value indicating whether to return the portfolios (default is \code{TRUE}).
-Three portfolio series are returned: 
-\code{w_optimized} is the optimized portfolio at each given optimization period 
-(using all the information up to and including that period, which can be executed 
-either on the same period or the following period), 
+Three portfolio series are returned:
+\code{w_optimized} is the optimized portfolio at each given optimization period
+(using all the information up to and including that period, which can be executed
+either on the same period or the following period),
 \code{w_rebalanced} is the rebalanced portfolio at each given rebalancing period,
-and \code{w_bop} is the "beginning-of-period" portfolio (i.e., at each period it contains 
-the weights held in the market in the previous period so that the portfolio return at 
+and \code{w_bop} is the "beginning-of-period" portfolio (i.e., at each period it contains
+the weights held in the market in the previous period so that the portfolio return at
 that period is just the product of the asset returns and \code{w_bop} at that period.)}
 
 \item{return_returns}{Logical value indicating whether to return the portfolio returns (default is \code{TRUE}).
-Three series are returned: 
-\code{return} with the portfolio returns, 
+Three series are returned:
+\code{return} with the portfolio returns,
 \code{wealth} with the portfolio wealth (aka cumulative P&L), and
 \code{X_lin} with the returns of the assets in the universe (note that the portfolio returns
 can also be obtained as \code{rowSums(X_lin * w_bop)} in the absence of transaction costs).}
 }
 \value{
-List with the portfolio backtest results, see 
+List with the portfolio backtest results, see
         \href{https://CRAN.R-project.org/package=portfolioBacktest/vignettes/PortfolioBacktest.html#result-format}{vignette-result-format}
-        for details. It can be accessed directly, but we highly recommend the use of the package specific functions to extract 
-        any required information, namely, \code{\link{backtestSelector}}, \code{\link{backtestTable}}, 
+        for details. It can be accessed directly, but we highly recommend the use of the package specific functions to extract
+        any required information, namely, \code{\link{backtestSelector}}, \code{\link{backtestTable}},
         \code{\link{backtestBoxPlot}}, \code{\link{backtestLeaderboard}},
         \code{\link{backtestSummary}}, \code{\link{summaryTable}}, \code{\link{summaryBarPlot}}.
 }
 \description{
-Automated backtesting of multiple portfolios over multiple 
-datasets of stock prices in a rolling-window fashion. 
+Automated backtesting of multiple portfolios over multiple
+datasets of stock prices in a rolling-window fashion.
 Each portfolio design is easily defined as a
-function that takes as input a window of the stock prices and outputs the 
-portfolio weights. Multiple portfolios can be easily specified as a list 
-of functions or as files in a folder. Multiple datasets can be conveniently 
+function that takes as input a window of the stock prices and outputs the
+portfolio weights. Multiple portfolios can be easily specified as a list
+of functions or as files in a folder. Multiple datasets can be conveniently
 obtained with the function \code{\link{financialDataResample}} that resamples
 the data downloaded with the function \code{\link{stockDataDownload}}.
 The results can be later assessed and arranged with tables and plots.
-The backtesting can be highly time-consuming depending on the number of 
+The backtesting can be highly time-consuming depending on the number of
 portfolios and datasets can be performed with parallel computation over
 multiple cores. Errors in functions are properly catched and handled so
 that the execution of the overal backtesting is not stopped (error messages
-are stored for debugging purposes). See 
+are stored for debugging purposes). See
 \href{https://CRAN.R-project.org/package=portfolioBacktest/vignettes/PortfolioBacktest.html}{vignette}
 for a detailed explanation.
 }
 \examples{
 \donttest{
 library(portfolioBacktest)
-data(dataset10)  # load dataset
+data(dataset10) # load dataset
 
 # define your own portfolio function
 ewp_portfolio <- function(dataset, ...) {
   N <- ncol(dataset$adjusted)
-  return(rep(1/N, N))
+  return(rep(1 / N, N))
 }
 
 # do backtest
@@ -165,7 +166,7 @@ summaryTable(bt_summary)
 }
 \seealso{
 \code{\link{stockDataDownload}}, \code{\link{financialDataResample}},
-         \code{\link{backtestSelector}}, \code{\link{backtestTable}}, 
+         \code{\link{backtestSelector}}, \code{\link{backtestTable}},
          \code{\link{backtestBoxPlot}}, \code{\link{backtestLeaderboard}},
          \code{\link{backtestSummary}}, \code{\link{summaryTable}}, \code{\link{summaryBarPlot}}.
 }

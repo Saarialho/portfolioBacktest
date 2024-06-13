@@ -9,7 +9,8 @@ financialDataResample(
   N_sample = 50,
   T_sample = 2 * 252,
   num_datasets = 10,
-  rm_stocks_with_na = TRUE
+  rm_stocks_with_na = FALSE,
+  rm_stocks_all_na = TRUE
 )
 }
 \arguments{

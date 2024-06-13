@@ -204,7 +204,7 @@ multipleXTSMerge <- function(xts_list) {
 #'         zoo
 #' @importFrom utils head
 #' @export
-financialDataResample <- function(X, N_sample = 50, T_sample = 2*252, num_datasets = 10, rm_stocks_with_na = TRUE) {
+financialDataResample <- function(X, N_sample = 50, T_sample = 2*252, num_datasets = 10, rm_stocks_with_na = FALSE, rm_stocks_all_na = TRUE) {
   # error control for indices
   X_index_list <- lapply(X, function(x) index(x))
   X_equal_indices_list <- sapply(X_index_list, function(x) identical(x, X_index_list[[1]]))
@@ -216,18 +216,8 @@ financialDataResample <- function(X, N_sample = 50, T_sample = 2*252, num_datase
   N <- max(num_cols)  # some elements will have N cols, others just 1
   elems_N <- which(num_cols == N)
   elems_1 <- setdiff(1:length(X), elems_N)
-  
-  # # if required, check inner NAs
-  # if (rm_stocks_with_na) {   
-  #   inner_NA_pattern <- sapply(X[elems_N], function(x) apply(x, 2, any_inner_NA))
-  #   columns_to_keep <- rowSums(inner_NA_pattern) == 0
-  #   if (any(!columns_to_keep)) 
-  #     warning("Some xts object does not satisfy monotone missing-data pattern.\n", call. = FALSE)
-  #   #X[elems_N] <- apply(X[elems_N], function(x) x[, columns_to_keep])
-  #   #N <- ncol(X[[elems_N[1]]])
-  # }
-  
-  # resampling blocks (without NAs)
+
+  # resampling blocks
   T <- nrow(X[[1]])
   if (T < T_sample) 
     stop("\"T_sample\" cannot be greater than the date length of \"X\".")
@@ -237,8 +227,14 @@ financialDataResample <- function(X, N_sample = 50, T_sample = 2*252, num_datase
     t_start <- sample(T - T_sample + 1, 1)
     t_mask <- t_start:(t_start + T_sample - 1)
     # random stocks
-    idx_cols <- if (rm_stocks_with_na) which(!apply(X[[1]][t_mask, ], 2, anyNA))
+    # idx_cols <- if (rm_stocks_with_na) which(!apply(X[[1]][t_mask, ], 2, anyNA))
+    #             else 1:N
+    
+    # random stocks, remove stock if all values are NA in the window
+    idx_cols <- if (rm_stocks_all_na) which(colSums(!is.na(X[[1]][t_mask, ])) > 0)
                 else 1:N
+    
+    
     if (length(idx_cols) == 0)
       stop("Time period without any stock without NAs!")
     stock_mask <- if (length(idx_cols) <= N_sample) idx_cols
@@ -249,7 +245,7 @@ financialDataResample <- function(X, N_sample = 50, T_sample = 2*252, num_datase
     dataset[[i]][elems_N] <- lapply(X[elems_N], function(x) x[t_mask, stock_mask])
     if (length(elems_1) > 0) dataset[[i]][elems_1] <- lapply(X[elems_1], function(x) x[t_mask, ])
   }
-  names(dataset) <- paste("dataset", 1:num_datasets)
+  names(dataset) <- paste0("dataset_", 1:num_datasets)
   message(sprintf("%d datasets resampled (with N = %d instruments and length T = %d) from the original data between %s and %s.", 
                   num_datasets, N_sample, T_sample, paste(head(X_index_list[[1]], 2))[1], last(X_index_list[[1]])))
 
